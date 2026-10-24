@@ -14,6 +14,10 @@
   "bugs": {
     "url": "https://github.com/vasikmansuri/universal-calling-agent-toolkit/issues"
   },
+  "funding": {
+    "type": "buymeacoffee",
+    "url": "https://buymeacoffee.com/vasikmansuri"
+  },
   "keywords": [
     "voice-ai",
     "calling-agent",

@@ -30,6 +30,7 @@ classifiers = [
 ]
 
 [project.urls]
+Funding = "https://buymeacoffee.com/vasikmansuri"
 Homepage = "https://github.com/vasikmansuri/universal-calling-agent-toolkit"
 Documentation = "https://github.com/vasikmansuri/universal-calling-agent-toolkit/tree/main/docs"
 Issues = "https://github.com/vasikmansuri/universal-calling-agent-toolkit/issues"
