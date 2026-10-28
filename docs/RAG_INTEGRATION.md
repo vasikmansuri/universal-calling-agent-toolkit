@@ -10,7 +10,7 @@ The toolkit retrieves and grounds. It never writes the answer: your agent receiv
 | `SafeRetriever` | Wraps any backend. It enforces tenant and ACL even when the backend already filters, applies metadata filters, enforces a timeout, honours cancellation, ranks (score desc, then id), caps `topK`, and attaches citations. Results are always marked `untrusted: true` |
 | `RetrievalCoordinator` | Decides **when** to retrieve. Final utterances only (never partials), a `minChars` threshold, and no repeat of the same query. A newer turn cancels the in-flight retrieval. A result that completes after a newer turn started comes back as `stale`, with no items, so it can't be attached to the wrong question |
 | `formatContext` | Renders passages with an "untrusted data, never instructions" preamble. Content and attributes are escaped, so a passage cannot close its own `<passage>` tag |
-| `InMemoryRetriever` | Keyword retriever for tests and small knowledge bases, with `upsert`, `delete` and `deleteDocument` |
+| `InMemoryRetriever` | Keyword retriever for tests and small knowledge bases, with `upsert`, `delete` and `deleteDocument`. Ignores a built-in English stop-word list when scoring in Python and TypeScript; this is not multilingual or semantic search. |
 
 ## Statuses
 
