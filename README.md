@@ -263,4 +263,4 @@ Copyright 2026 Vasik Mansuri. Licensed under the [Apache License, Version 2.0](L
 
 If this project is useful to you, you can support my open-source work:
 
-<a href="https://buymeacoffee.com/vasikmansuri"><img src="https://img.shields.io/badge/Buy_Me_a_Coffee-support-ffdd00?style=for-the-badge&logo=buymeacoffee&logoColor=black" alt="Buy Me a Coffee"/></a>
+<a href="https://github.com/sponsors/vasikmansuri"><img src="https://img.shields.io/badge/GitHub_Sponsors-support-ea4aaa?style=for-the-badge&logo=githubsponsors&logoColor=white" alt="GitHub Sponsors"/></a>
