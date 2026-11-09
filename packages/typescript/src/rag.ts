@@ -171,7 +171,19 @@ export class SafeRetriever {
   }
 }
 
-const terms = (text: string) => new Set(text.toLowerCase().match(/[a-z0-9]+/g) ?? []);
+const STOP_WORDS = new Set(
+  `
+    a an and are as at be been being but by did do does doing during each for from
+    further had has have having he her here hers herself him himself his how i if in
+    into is it its itself just more most my myself of once only or other our ours
+    ourselves own same she should so some such than that the their theirs them
+    themselves then there these they this those through to too until very was we
+    were what when where which while who whom why will with would you your yours
+    yourself yourselves
+  `.trim().split(/\s+/),
+);
+const terms = (text: string) =>
+  new Set((text.toLowerCase().match(/[a-z0-9]+/g) ?? []).filter((term) => !STOP_WORDS.has(term)));
 
 /** Keyword retriever for tests, demos and small knowledge bases. Filters by tenant only, like most backends. */
 export class InMemoryRetriever implements Retriever {

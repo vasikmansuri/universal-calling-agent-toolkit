@@ -213,8 +213,24 @@ class SafeRetriever:
         return replace(base, status="ok" if items else "empty", items=items, dropped_for_access=dropped)
 
 
+_STOP_WORDS = frozenset(
+    """
+    a an and are as at be been being but by did do does doing during each for from
+    further had has have having he her here hers herself him himself his how i if in
+    into is it its itself just more most my myself of once only or other our ours
+    ourselves own same she should so some such than that the their theirs them
+    themselves then there these they this those through to too until very was we
+    were what when where which while who whom why will with would you your yours
+    yourself yourselves
+    """.split()
+)
+
+
 def _terms(text: str) -> set[str]:
-    return set(re.findall(r"[a-z0-9]+", text.lower()))
+    return {
+        term for term in re.findall(r"[a-z0-9]+", text.lower())
+        if term not in _STOP_WORDS
+    }
 
 
 class InMemoryRetriever:

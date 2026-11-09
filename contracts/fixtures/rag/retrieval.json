@@ -1,5 +1,5 @@
 {
-  "description": "SafeRetriever over InMemoryRetriever. InMemoryRetriever filters by tenant only (as a backend would) and scores by the number of distinct query terms ([a-z0-9]+, lowercased) present in the chunk. SafeRetriever re-checks tenant and ACL (counting ACL drops), applies metadata filters, sorts by score desc then chunk id, and keeps topK (default 5). `formatted` is formatContext() output.",
+  "description": "SafeRetriever over InMemoryRetriever. InMemoryRetriever filters by tenant only (as a backend would) and scores the distinct [a-z0-9]+ query terms present in each chunk after removing the same common English stop words from queries and chunks in both implementations. SafeRetriever re-checks tenant and ACL (counting ACL drops), applies metadata filters, sorts by score desc then chunk id, and keeps topK (default 5). `formatted` is formatContext() output.",
   "chunks": [
     { "id": "c1", "documentId": "d1", "tenantId": "t1", "text": "Our support hours are 9am to 5pm Monday to Friday", "metadata": { "lang": "en" }, "acl": null, "source": { "title": "Support FAQ", "uri": "kb://faq#hours", "page": null } },
     { "id": "c2", "documentId": "d2", "tenantId": "t1", "text": "Refunds are processed within 5 business days", "metadata": { "lang": "en" }, "acl": { "principals": [], "groups": ["billing"] }, "source": { "title": "Billing policy", "uri": null, "page": 3 } },
@@ -14,7 +14,7 @@
       "expect": {
         "status": "ok",
         "chunkIds": ["c1", "c4"],
-        "droppedForAccess": 2,
+        "droppedForAccess": 1,
         "citations": [
           { "id": "1", "chunkId": "c1", "documentId": "d1", "title": "Support FAQ", "uri": "kb://faq#hours", "page": null },
           { "id": "2", "chunkId": "c4", "documentId": "d4", "title": "Untrusted note", "uri": null, "page": null }
@@ -31,6 +31,11 @@
       "name": "metadata filter and principal grant",
       "request": { "tenantId": "t1", "principal": { "id": "agent-7", "groups": [] }, "query": "hours", "filter": { "lang": "de" } },
       "expect": { "status": "ok", "chunkIds": ["c5"], "droppedForAccess": 0 }
+    },
+    {
+      "name": "common stop words do not match unrelated chunks",
+      "request": { "tenantId": "t1", "principal": { "id": "caller", "groups": [] }, "query": "the are" },
+      "expect": { "status": "empty", "chunkIds": [], "droppedForAccess": 0, "formatted": "No reference passages were found." }
     },
     {
       "name": "no match is an explicit empty result",
