@@ -56,6 +56,10 @@
       "types": "./dist/providers/deepgram.d.ts",
       "import": "./dist/providers/deepgram.js"
     },
+    "./openai": {
+      "types": "./dist/providers/openai.d.ts",
+      "import": "./dist/providers/openai.js"
+    },
     "./telnyx": {
       "types": "./dist/providers/telnyx.d.ts",
       "import": "./dist/providers/telnyx.js"

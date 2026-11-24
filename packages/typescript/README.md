@@ -7,7 +7,7 @@ import { AudioPipeline, EmailCapture } from "@vasikmansuri/calling-agent-toolkit
 import { TwilioMediaTransport } from "@vasikmansuri/calling-agent-toolkit/twilio";
 ```
 
-Entry points: `.`, `./twilio`, `./plivo`, `./telnyx`, `./vonage`, `./deepgram`.
+Entry points: `.`, `./twilio`, `./plivo`, `./telnyx`, `./vonage`, `./deepgram`, `./openai`.
 
 Requires Node 20 or later. ESM only.
 

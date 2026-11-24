@@ -1,0 +1,639 @@
+{
+ "description": "OpenAI Realtime transcription (wss://api.openai.com/v1/realtime?intent=transcription) server events -> normalized SttResults, and session.update construction. Shapes follow https://developers.openai.com/api/docs/guides/realtime-transcription (delta: item_id, content_index, delta; completed: item_id, content_index, transcript), https://developers.openai.com/api/docs/api-reference/realtime-server-events/conversation/item/input_audio_transcription/failed, https://developers.openai.com/api/docs/api-reference/realtime-server-events/error and https://developers.openai.com/api/docs/api-reference/realtime-client-events/session/update (audio/pcm at 24000 Hz). Ids and transcript text are illustrative. Confidence and start time are null because the events carry neither. segmentKey is item_id:content_index.",
+ "sequences": [
+  {
+   "name": "deltas accumulate per item, completed commits and ends the turn",
+   "messages": [
+    {
+     "type": "conversation.item.input_audio_transcription.delta",
+     "event_id": "event_1",
+     "item_id": "item_003",
+     "content_index": 0,
+     "delta": "Hello,"
+    },
+    {
+     "type": "conversation.item.input_audio_transcription.delta",
+     "event_id": "event_1",
+     "item_id": "item_003",
+     "content_index": 0,
+     "delta": " how are"
+    },
+    {
+     "type": "conversation.item.input_audio_transcription.delta",
+     "event_id": "event_1",
+     "item_id": "item_003",
+     "content_index": 0,
+     "delta": " you?"
+    },
+    {
+     "type": "conversation.item.input_audio_transcription.completed",
+     "event_id": "event_2",
+     "item_id": "item_003",
+     "content_index": 0,
+     "transcript": "Hello, how are you?"
+    }
+   ],
+   "expect": [
+    [
+     {
+      "type": "interim",
+      "text": "Hello,",
+      "confidence": null
+     }
+    ],
+    [
+     {
+      "type": "interim",
+      "text": "Hello, how are",
+      "confidence": null
+     }
+    ],
+    [
+     {
+      "type": "interim",
+      "text": "Hello, how are you?",
+      "confidence": null
+     }
+    ],
+    [
+     {
+      "type": "segment_final",
+      "text": "Hello, how are you?",
+      "confidence": null,
+      "segmentKey": "item_003:0",
+      "startMs": null
+     },
+     {
+      "type": "turn_end"
+     }
+    ]
+   ]
+  },
+  {
+   "name": "completed without deltas (non-streaming models)",
+   "messages": [
+    {
+     "type": "conversation.item.input_audio_transcription.completed",
+     "event_id": "event_2",
+     "item_id": "item_004",
+     "content_index": 0,
+     "transcript": "my email is john dot smith at gmail dot com"
+    }
+   ],
+   "expect": [
+    [
+     {
+      "type": "segment_final",
+      "text": "my email is john dot smith at gmail dot com",
+      "confidence": null,
+      "segmentKey": "item_004:0",
+      "startMs": null
+     },
+     {
+      "type": "turn_end"
+     }
+    ]
+   ]
+  },
+  {
+   "name": "interleaved items never mix their text",
+   "messages": [
+    {
+     "type": "conversation.item.input_audio_transcription.delta",
+     "event_id": "event_1",
+     "item_id": "item_a",
+     "content_index": 0,
+     "delta": "one"
+    },
+    {
+     "type": "conversation.item.input_audio_transcription.delta",
+     "event_id": "event_1",
+     "item_id": "item_b",
+     "content_index": 0,
+     "delta": "two"
+    },
+    {
+     "type": "conversation.item.input_audio_transcription.delta",
+     "event_id": "event_1",
+     "item_id": "item_a",
+     "content_index": 0,
+     "delta": " more"
+    },
+    {
+     "type": "conversation.item.input_audio_transcription.completed",
+     "event_id": "event_2",
+     "item_id": "item_a",
+     "content_index": 0,
+     "transcript": "one more"
+    },
+    {
+     "type": "conversation.item.input_audio_transcription.completed",
+     "event_id": "event_2",
+     "item_id": "item_b",
+     "content_index": 0,
+     "transcript": "two"
+    }
+   ],
+   "expect": [
+    [
+     {
+      "type": "interim",
+      "text": "one",
+      "confidence": null
+     }
+    ],
+    [
+     {
+      "type": "interim",
+      "text": "two",
+      "confidence": null
+     }
+    ],
+    [
+     {
+      "type": "interim",
+      "text": "one more",
+      "confidence": null
+     }
+    ],
+    [
+     {
+      "type": "segment_final",
+      "text": "one more",
+      "confidence": null,
+      "segmentKey": "item_a:0",
+      "startMs": null
+     },
+     {
+      "type": "turn_end"
+     }
+    ],
+    [
+     {
+      "type": "segment_final",
+      "text": "two",
+      "confidence": null,
+      "segmentKey": "item_b:0",
+      "startMs": null
+     },
+     {
+      "type": "turn_end"
+     }
+    ]
+   ]
+  },
+  {
+   "name": "accumulated text is cleared after completion",
+   "messages": [
+    {
+     "type": "conversation.item.input_audio_transcription.delta",
+     "event_id": "event_1",
+     "item_id": "item_003",
+     "content_index": 0,
+     "delta": "first"
+    },
+    {
+     "type": "conversation.item.input_audio_transcription.completed",
+     "event_id": "event_2",
+     "item_id": "item_003",
+     "content_index": 0,
+     "transcript": "first"
+    },
+    {
+     "type": "conversation.item.input_audio_transcription.delta",
+     "event_id": "event_1",
+     "item_id": "item_003",
+     "content_index": 0,
+     "delta": "again"
+    }
+   ],
+   "expect": [
+    [
+     {
+      "type": "interim",
+      "text": "first",
+      "confidence": null
+     }
+    ],
+    [
+     {
+      "type": "segment_final",
+      "text": "first",
+      "confidence": null,
+      "segmentKey": "item_003:0",
+      "startMs": null
+     },
+     {
+      "type": "turn_end"
+     }
+    ],
+    [
+     {
+      "type": "interim",
+      "text": "again",
+      "confidence": null
+     }
+    ]
+   ]
+  },
+  {
+   "name": "content parts of one item are keyed separately",
+   "messages": [
+    {
+     "type": "conversation.item.input_audio_transcription.delta",
+     "event_id": "event_1",
+     "item_id": "item_005",
+     "content_index": 0,
+     "delta": "a"
+    },
+    {
+     "type": "conversation.item.input_audio_transcription.delta",
+     "event_id": "event_1",
+     "item_id": "item_005",
+     "content_index": 1,
+     "delta": "b"
+    },
+    {
+     "type": "conversation.item.input_audio_transcription.completed",
+     "event_id": "event_2",
+     "item_id": "item_005",
+     "content_index": 1,
+     "transcript": "b"
+    }
+   ],
+   "expect": [
+    [
+     {
+      "type": "interim",
+      "text": "a",
+      "confidence": null
+     }
+    ],
+    [
+     {
+      "type": "interim",
+      "text": "b",
+      "confidence": null
+     }
+    ],
+    [
+     {
+      "type": "segment_final",
+      "text": "b",
+      "confidence": null,
+      "segmentKey": "item_005:1",
+      "startMs": null
+     },
+     {
+      "type": "turn_end"
+     }
+    ]
+   ]
+  },
+  {
+   "name": "extra completed fields (usage, languages) are ignored",
+   "messages": [
+    {
+     "type": "conversation.item.input_audio_transcription.completed",
+     "event_id": "event_2",
+     "item_id": "item_006",
+     "content_index": 0,
+     "transcript": "bonjour",
+     "languages": [
+      {
+       "code": "fr"
+      }
+     ],
+     "usage": {
+      "type": "tokens"
+     }
+    }
+   ],
+   "expect": [
+    [
+     {
+      "type": "segment_final",
+      "text": "bonjour",
+      "confidence": null,
+      "segmentKey": "item_006:0",
+      "startMs": null
+     },
+     {
+      "type": "turn_end"
+     }
+    ]
+   ]
+  },
+  {
+   "name": "empty transcript is still a committed unit",
+   "messages": [
+    {
+     "type": "conversation.item.input_audio_transcription.completed",
+     "event_id": "event_2",
+     "item_id": "item_007",
+     "content_index": 0,
+     "transcript": ""
+    }
+   ],
+   "expect": [
+    [
+     {
+      "type": "segment_final",
+      "text": "",
+      "confidence": null,
+      "segmentKey": "item_007:0",
+      "startMs": null
+     },
+     {
+      "type": "turn_end"
+     }
+    ]
+   ]
+  },
+  {
+   "name": "events outside transcription are ignored",
+   "messages": [
+    {
+     "type": "session.created",
+     "event_id": "e"
+    },
+    {
+     "type": "session.updated",
+     "event_id": "e"
+    },
+    {
+     "type": "input_audio_buffer.committed",
+     "event_id": "e",
+     "item_id": "item_003"
+    },
+    {
+     "type": "conversation.item.added",
+     "event_id": "e"
+    },
+    {
+     "type": "unknown.future.event"
+    }
+   ],
+   "expect": [
+    [],
+    [],
+    [],
+    [],
+    []
+   ]
+  }
+ ],
+ "errors": [
+  {
+   "name": "transcription failed",
+   "message": {
+    "type": "conversation.item.input_audio_transcription.failed",
+    "event_id": "e",
+    "item_id": "item_008",
+    "content_index": 0,
+    "error": {
+     "type": "invalid_request_error",
+     "code": "transcription_failed",
+     "message": "The audio could not be transcribed.",
+     "param": null
+    }
+   },
+   "expectError": "unknown",
+   "expectProviderCode": "transcription_failed",
+   "expectMessage": "item_008:0"
+  },
+  {
+   "name": "transcription failed with only a type",
+   "message": {
+    "type": "conversation.item.input_audio_transcription.failed",
+    "event_id": "e",
+    "item_id": "item_009",
+    "content_index": 0,
+    "error": {
+     "type": "server_error"
+    }
+   },
+   "expectError": "unknown",
+   "expectProviderCode": "server_error"
+  },
+  {
+   "name": "error event",
+   "message": {
+    "type": "error",
+    "event_id": "e",
+    "error": {
+     "type": "invalid_request_error",
+     "code": "example_code",
+     "message": "Example message.",
+     "event_id": null,
+     "param": null
+    }
+   },
+   "expectError": "unknown",
+   "expectProviderCode": "example_code",
+   "expectMessage": "Example message."
+  },
+  {
+   "name": "error event without a code falls back to its type",
+   "message": {
+    "type": "error",
+    "event_id": "e",
+    "error": {
+     "type": "server_error",
+     "message": "Example message."
+    }
+   },
+   "expectError": "unknown",
+   "expectProviderCode": "server_error"
+  },
+  {
+   "name": "error event without an error object",
+   "message": {
+    "type": "error",
+    "event_id": "e"
+   },
+   "expectError": "malformed_message"
+  },
+  {
+   "name": "not json",
+   "raw": "not json",
+   "expectError": "malformed_message"
+  },
+  {
+   "name": "not an object",
+   "raw": "[1]",
+   "expectError": "malformed_message"
+  },
+  {
+   "name": "no type",
+   "message": {
+    "item_id": "x"
+   },
+   "expectError": "malformed_message"
+  },
+  {
+   "name": "delta without item_id",
+   "message": {
+    "type": "conversation.item.input_audio_transcription.delta",
+    "content_index": 0,
+    "delta": "x"
+   },
+   "expectError": "malformed_message"
+  },
+  {
+   "name": "delta with empty item_id",
+   "message": {
+    "type": "conversation.item.input_audio_transcription.delta",
+    "item_id": "",
+    "content_index": 0,
+    "delta": "x"
+   },
+   "expectError": "malformed_message"
+  },
+  {
+   "name": "delta without content_index",
+   "message": {
+    "type": "conversation.item.input_audio_transcription.delta",
+    "item_id": "item_003",
+    "delta": "x"
+   },
+   "expectError": "malformed_message"
+  },
+  {
+   "name": "delta that is not a string",
+   "message": {
+    "type": "conversation.item.input_audio_transcription.delta",
+    "item_id": "item_003",
+    "content_index": 0,
+    "delta": 5
+   },
+   "expectError": "malformed_message"
+  },
+  {
+   "name": "completed without transcript",
+   "message": {
+    "type": "conversation.item.input_audio_transcription.completed",
+    "item_id": "item_003",
+    "content_index": 0
+   },
+   "expectError": "malformed_message"
+  }
+ ],
+ "sessionUpdates": [
+  {
+   "name": "model only",
+   "options": {
+    "model": "gpt-4o-transcribe"
+   },
+   "expect": {
+    "type": "session.update",
+    "session": {
+     "type": "transcription",
+     "audio": {
+      "input": {
+       "format": {
+        "type": "audio/pcm",
+        "rate": 24000
+       },
+       "transcription": {
+        "model": "gpt-4o-transcribe"
+       }
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "language, prompt and manual turns (turn_detection null)",
+   "options": {
+    "model": "gpt-4o-transcribe",
+    "language": "en",
+    "prompt": "Expect email addresses.",
+    "turnDetection": null
+   },
+   "expect": {
+    "type": "session.update",
+    "session": {
+     "type": "transcription",
+     "audio": {
+      "input": {
+       "format": {
+        "type": "audio/pcm",
+        "rate": 24000
+       },
+       "transcription": {
+        "model": "gpt-4o-transcribe",
+        "language": "en",
+        "prompt": "Expect email addresses."
+       },
+       "turn_detection": null
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "languages with server VAD",
+   "options": {
+    "model": "gpt-transcribe",
+    "languages": [
+     "en",
+     "fr"
+    ],
+    "turnDetection": "server_vad"
+   },
+   "expect": {
+    "type": "session.update",
+    "session": {
+     "type": "transcription",
+     "audio": {
+      "input": {
+       "format": {
+        "type": "audio/pcm",
+        "rate": 24000
+       },
+       "transcription": {
+        "model": "gpt-transcribe",
+        "languages": [
+         "en",
+         "fr"
+        ]
+       },
+       "turn_detection": {
+        "type": "server_vad"
+       }
+      }
+     }
+    }
+   }
+  }
+ ],
+ "sessionUpdateErrors": [
+  {
+   "name": "empty model",
+   "options": {
+    "model": ""
+   },
+   "expectError": "invalid_configuration"
+  },
+  {
+   "name": "language and languages together",
+   "options": {
+    "model": "gpt-transcribe",
+    "language": "en",
+    "languages": [
+     "en"
+    ]
+   },
+   "expectError": "invalid_configuration"
+  },
+  {
+   "name": "empty languages",
+   "options": {
+    "model": "gpt-transcribe",
+    "languages": []
+   },
+   "expectError": "invalid_configuration"
+  }
+ ]
+}

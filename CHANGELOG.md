@@ -19,6 +19,6 @@
 - **Conformance suite:** reusable, framework-agnostic, for media adapters.
 - **Audio pipeline:** streaming resampler, framing, processor chain with honest status and stacking warnings.
 - **Email capture:** spoken-form normalization, clarification instead of guessing, refusal and deferral, confirmation protection, persistence, isolation.
-- **STT:** contracts, transcript reconciler, pipeline-to-STT bridge, Deepgram live adapter.
+- **STT:** contracts, transcript reconciler, pipeline-to-STT bridge, Deepgram live adapter, OpenAI Realtime transcription adapter.
 - **RAG:** safe retriever (tenant and ACL, timeout, cancellation, citations, untrusted marking), retrieval coordinator (final-only, stale protection), LangChain and LlamaIndex wrappers, in-memory retriever.
 - **Examples and benchmarks:** end-to-end examples and micro-benchmarks in both languages.
