@@ -90,6 +90,16 @@ def test_mulaw_8k_becomes_20ms_16k_frames() -> None:
     assert [f.timestamp_ms for f in out] == [100, 120]
 
 
+def test_alaw_8k_becomes_20ms_16k_frames() -> None:
+    pipeline = AudioPipeline(target_sample_rate=16000)
+    alaw = AudioFormat("alaw", 8000, 1)
+    quiet_positive = b"\xd5" * 160  # A-law 0xD5 decodes to +8
+    out = pipeline.push(frame(quiet_positive, format=alaw)) + pipeline.push(frame(quiet_positive, format=alaw)) + pipeline.flush()
+    assert [len(f.payload) for f in out] == [640, 640]
+    assert all(f.is_complete_frame and f.format == PCM_16K for f in out)
+    assert all(s == 8 for f in out for s in pcm16_to_samples(f.payload))
+
+
 def test_processors_run_and_report_active() -> None:
     pipeline = AudioPipeline(target_sample_rate=16000, processors=[Gain(2)])
     [out] = pipeline.push(frame(samples_to_pcm16([10] * 320), format=PCM_16K))
@@ -142,7 +152,7 @@ def test_direction_codec_and_rate_change() -> None:
     pipeline = AudioPipeline(target_sample_rate=16000)
     assert pipeline.push(frame(b"\x00" * 160, direction="outbound")) == []
     with pytest.raises(ProviderError, match="No codec"):
-        pipeline.push(frame(b"\x00" * 160, format=AudioFormat("alaw", 8000, 1)))
+        pipeline.push(frame(b"\x00" * 160, format=AudioFormat("opus", 8000, 1)))  # type: ignore[arg-type]
     pipeline.push(frame(b"\x00" * 160))
     with pytest.raises(ProviderError, match="changed mid-stream"):
         pipeline.push(frame(b"\x00" * 320, format=PCM_16K))

@@ -9,7 +9,9 @@ import {
   CAPABILITIES,
   PROVIDER_ERROR_CODES,
   ProviderError,
+  decodeAlaw,
   decodeMulaw,
+  encodeAlaw,
   encodeMulaw,
   frameFromWire,
   frameToWire,
@@ -94,6 +96,29 @@ describe("G.711 mu-law vectors", () => {
     const view = new DataView(pcm.buffer);
     samples.forEach((s, i) => view.setInt16(i * 2, s, true));
     expect([...encodeMulaw(pcm)]).toEqual(fixture.encode.map((e: [number, number]) => e[1]));
+  });
+});
+
+describe("G.711 A-law vectors", () => {
+  const fixture = load("fixtures/core/g711-alaw.json");
+  const allCodes = Uint8Array.from(fixture.decode.map((_: number, i: number) => i));
+  it("decodes all 256 codes", () => {
+    const pcm = decodeAlaw(allCodes);
+    const view = new DataView(pcm.buffer);
+    expect(fixture.decode.map((_: number, i: number) => view.getInt16(i * 2, true))).toEqual(fixture.decode);
+  });
+  it("encodes reference samples", () => {
+    const samples: number[] = fixture.encode.map((e: [number, number]) => e[0]);
+    const pcm = new Uint8Array(samples.length * 2);
+    const view = new DataView(pcm.buffer);
+    samples.forEach((s, i) => view.setInt16(i * 2, s, true));
+    expect([...encodeAlaw(pcm)]).toEqual(fixture.encode.map((e: [number, number]) => e[1]));
+  });
+  it("round-trips every code", () => {
+    expect([...encodeAlaw(decodeAlaw(allCodes))]).toEqual([...allCodes]);
+  });
+  it("rejects odd-length PCM16", () => {
+    expect(() => encodeAlaw(new Uint8Array(3))).toThrow(expect.objectContaining({ code: "malformed_message" }));
   });
 });
 

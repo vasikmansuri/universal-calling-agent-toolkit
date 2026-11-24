@@ -14,7 +14,7 @@ The STT adapter receives exactly the pipeline's output. `SttAudioBridge` connect
 |---|---|---|
 | G.711 μ-law decode/encode | done | Bit-exact with CPython `audioop` across all 256 codes |
 | PCM16 LE | done | Native format of the pipeline |
-| A-law | not implemented | Adapters may report `alaw`; the pipeline raises `unsupported_format` |
+| G.711 A-law decode/encode | done | Bit-exact with CPython `audioop` across all 256 codes; the pipeline decodes `alaw` (e.g. Telnyx PCMA, A-law WAV) |
 | Resampling | done | Streaming linear interpolation, integer-exact across TS and Python. Fine for upsampling (8 → 16 kHz). Downsampling has no anti-alias filter, so the pipeline adds `downsampling_without_antialiasing` to `status().warnings` |
 | Framing | done | Fixed `frameMs` (default 20 ms); a short tail on `flush()` is emitted with `isCompleteFrame: false` and is not processed |
 | Timestamps | done | Output frames keep the input's `timestampKind` and advance by `frameMs` |

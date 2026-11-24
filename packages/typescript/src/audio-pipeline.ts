@@ -5,7 +5,7 @@
  * decode -> validate -> resample -> fixed framing -> processors (noise suppression, speaker isolation).
  * The pipeline reports exactly which processors ran; it never claims suppression that did not happen.
  */
-import { decodeMulaw } from "./audio.js";
+import { decodeAlaw, decodeMulaw } from "./audio.js";
 import { ProviderError } from "./errors.js";
 import { SUPPORTED_SAMPLE_RATES, type AudioFormat, type AudioFrame, type MediaDirection, type TimestampKind } from "./types.js";
 
@@ -187,6 +187,7 @@ export class AudioPipeline {
     }
     let samples: Int16Array;
     if (frame.format.encoding === "mulaw") samples = pcm16ToSamples(decodeMulaw(frame.payload));
+    else if (frame.format.encoding === "alaw") samples = pcm16ToSamples(decodeAlaw(frame.payload));
     else if (frame.format.encoding === "pcm_s16le") samples = pcm16ToSamples(frame.payload);
     else {
       throw new ProviderError({

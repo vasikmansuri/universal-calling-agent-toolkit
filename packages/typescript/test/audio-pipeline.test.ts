@@ -76,6 +76,16 @@ describe("AudioPipeline", () => {
     expect(out.map((f) => f.timestampMs)).toEqual([100, 120]);
   });
 
+  it("decodes 8 kHz A-law chunks into 20 ms 16 kHz PCM frames", () => {
+    const pipeline = new AudioPipeline({ targetSampleRate: 16000 });
+    const alaw = { format: { encoding: "alaw", sampleRate: 8000, channels: 1 } } as const;
+    const quietPositive = new Uint8Array(160).fill(0xd5); // A-law 0xD5 decodes to +8
+    const out = [...pipeline.push(frame(quietPositive, alaw)), ...pipeline.push(frame(quietPositive, alaw)), ...pipeline.flush()];
+    expect(out.map((f) => f.payload.byteLength)).toEqual([640, 640]);
+    expect(out.every((f) => f.isCompleteFrame && f.format.sampleRate === 16000 && f.format.encoding === "pcm_s16le")).toBe(true);
+    expect(out.flatMap((f) => [...pcm16ToSamples(f.payload)]).every((s) => s === 8)).toBe(true);
+  });
+
   it("runs processors in order and reports them active", () => {
     const pipeline = new AudioPipeline({ targetSampleRate: 16000, processors: [gain(2)] });
     const pcm = samplesToPcm16(new Array(320).fill(10));
@@ -130,9 +140,8 @@ describe("AudioPipeline", () => {
   it("ignores other directions, rejects unknown codecs and rate changes", () => {
     const pipeline = new AudioPipeline({ targetSampleRate: 16000 });
     expect(pipeline.push(frame(new Uint8Array(160), { direction: "outbound" }))).toEqual([]);
-    expect(() => pipeline.push(frame(new Uint8Array(160), { format: { encoding: "alaw", sampleRate: 8000, channels: 1 } }))).toThrow(
-      /No codec/,
-    );
+    const unknown = { encoding: "opus", sampleRate: 8000, channels: 1 } as unknown as AudioFrame["format"];
+    expect(() => pipeline.push(frame(new Uint8Array(160), { format: unknown }))).toThrow(/No codec/);
     pipeline.push(frame(new Uint8Array(160)));
     expect(() => pipeline.push(frame(new Uint8Array(320), { format: { encoding: "pcm_s16le", sampleRate: 16000, channels: 1 } }))).toThrow(
       /changed mid-stream/,

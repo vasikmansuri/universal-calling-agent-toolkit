@@ -18,7 +18,9 @@ from calling_agent_toolkit import (
     AudioFormat,
     ProviderCapabilities,
     ProviderError,
+    decode_alaw,
     decode_mulaw,
+    encode_alaw,
     encode_mulaw,
     frame_from_wire,
     frame_to_wire,
@@ -112,6 +114,30 @@ def test_mulaw_encodes_reference_samples() -> None:
     samples = [s for s, _ in G711["encode"]]
     encoded = encode_mulaw(struct.pack(f"<{len(samples)}h", *samples))
     assert list(encoded) == [u for _, u in G711["encode"]]
+
+
+G711_ALAW = load("fixtures/core/g711-alaw.json")
+
+
+def test_alaw_decodes_all_codes() -> None:
+    pcm = decode_alaw(bytes(range(256)))
+    assert list(struct.unpack("<256h", pcm)) == G711_ALAW["decode"]
+
+
+def test_alaw_encodes_reference_samples() -> None:
+    samples = [s for s, _ in G711_ALAW["encode"]]
+    encoded = encode_alaw(struct.pack(f"<{len(samples)}h", *samples))
+    assert list(encoded) == [a for _, a in G711_ALAW["encode"]]
+
+
+def test_alaw_round_trips_every_code() -> None:
+    assert encode_alaw(decode_alaw(bytes(range(256)))) == bytes(range(256))
+
+
+def test_alaw_rejects_odd_length_pcm() -> None:
+    with pytest.raises(ProviderError) as info:
+        encode_alaw(b"\x00" * 3)
+    assert info.value.code == "malformed_message"
 
 
 @pytest.mark.parametrize("wire", SCHEMA_CASES["AudioFrame"]["valid"])

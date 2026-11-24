@@ -4,7 +4,7 @@
 
 ### Added
 - **Contracts:** JSON Schema for the core types, plus shared fixtures that both language packages run.
-- **Core:** typed errors, capability declaration and checks, adapter interfaces, provider registry, bounded queues, G.711 μ-law codec (bit-exact with CPython `audioop`).
+- **Core:** typed errors, capability declaration and checks, adapter interfaces, provider registry, bounded queues, G.711 μ-law and A-law codecs (bit-exact with CPython `audioop`).
 - **Twilio:**
   - Media Streams adapter (in/out, marks, clear);
   - webhook and handshake signature validation (checked against twilio-python);

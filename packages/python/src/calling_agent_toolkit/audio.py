@@ -86,6 +86,51 @@ def encode_mulaw(pcm: bytes) -> bytes:
     return bytes(linear_to_mulaw(s) for s in struct.unpack(f"<{len(pcm) // 2}h", pcm))
 
 
+# ITU-T G.711 A-law, bit-exact with CPython's audioop (contracts/fixtures/core/g711-alaw.json).
+# Encoding works on 13-bit samples (pcm16 >> 3, arithmetic shift), so small negatives round down.
+# Even bits are inverted on the wire (XOR 0x55); the sign bit is set for non-negative samples.
+_ALAW_SEGMENT_END_13 = (0x1F, 0x3F, 0x7F, 0xFF, 0x1FF, 0x3FF, 0x7FF, 0xFFF)
+
+
+def _alaw_decode_entry(byte: int) -> int:
+    a = byte ^ 0x55
+    segment = (a >> 4) & 0x07
+    mantissa = ((a & 0x0F) << 4) + (8 if segment == 0 else 0x108)
+    magnitude = mantissa << (segment - 1) if segment > 1 else mantissa
+    return magnitude if a & 0x80 else -magnitude
+
+
+_ALAW_DECODE_TABLE = tuple(_alaw_decode_entry(i) for i in range(256))
+
+
+def alaw_to_linear(byte: int) -> int:
+    return _ALAW_DECODE_TABLE[byte & 0xFF]
+
+
+def linear_to_alaw(sample: int) -> int:
+    s = max(-32768, min(32767, int(sample))) >> 3
+    mask = 0xD5
+    if s < 0:
+        s = -s - 1
+        mask = 0x55
+    for segment, end in enumerate(_ALAW_SEGMENT_END_13):
+        if s <= end:
+            return ((segment << 4) | ((s >> (1 if segment < 2 else segment)) & 0x0F)) ^ mask
+    return 0x7F ^ mask
+
+
+def decode_alaw(data: bytes) -> bytes:
+    """A-law bytes -> little-endian PCM16 bytes."""
+    return struct.pack(f"<{len(data)}h", *(_ALAW_DECODE_TABLE[b] for b in data))
+
+
+def encode_alaw(pcm: bytes) -> bytes:
+    """Little-endian PCM16 bytes -> A-law bytes."""
+    if len(pcm) % 2:
+        raise ProviderError(code="malformed_message", provider="core", message="PCM16 input has an odd byte length.")
+    return bytes(linear_to_alaw(s) for s in struct.unpack(f"<{len(pcm) // 2}h", pcm))
+
+
 def swap_bytes16(data: bytes) -> bytes:
     """Swap each 16-bit sample between big- and little-endian."""
     out = bytearray(data)
