@@ -63,6 +63,10 @@
     "./vonage": {
       "types": "./dist/providers/vonage.d.ts",
       "import": "./dist/providers/vonage.js"
+    },
+    "./rnnoise": {
+      "types": "./dist/processors/rnnoise.d.ts",
+      "import": "./dist/processors/rnnoise.js"
     }
   },
   "files": [
@@ -77,7 +81,16 @@
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run"
   },
+  "peerDependencies": {
+    "@jitsi/rnnoise-wasm": ">=0.2.1 <1"
+  },
+  "peerDependenciesMeta": {
+    "@jitsi/rnnoise-wasm": {
+      "optional": true
+    }
+  },
   "devDependencies": {
+    "@jitsi/rnnoise-wasm": "0.2.1",
     "@types/node": "^22.15.0",
     "ajv": "^8.17.1",
     "typescript": "^5.8.3",
