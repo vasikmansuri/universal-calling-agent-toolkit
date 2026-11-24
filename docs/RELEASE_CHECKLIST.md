@@ -17,6 +17,7 @@ Remove those locks only after the owner explicitly approves a release.
   - Telnyx: timestamp units and L16 byte order.
   - Vonage: outbound frame size.
   - Deepgram: `KeepAlive` and `CloseStream`.
+  - OpenAI: whether deltas are strictly incremental, the `input_audio_buffer.commit` and `error` behaviour, and the A-law/μ-law (`audio/pcma`, `audio/pcmu`) input rates, which the docs do not state.
 - [ ] PROVIDER_COMPATIBILITY.md statuses updated from those results, with no row upgraded without evidence.
 - [ ] Licence review: runtime dependencies are none. Dev dependencies (vitest, ajv, typescript, pytest, jsonschema, mypy, langchain-core) are not shipped.
 - [ ] `npm pack` and `uv build` artifacts inspected: only `dist/` and `LICENSE`/`README.md` in npm; only the package and `py.typed` in the wheel.

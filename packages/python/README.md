@@ -8,6 +8,6 @@ from calling_agent_toolkit.email_capture import EmailCapture
 from calling_agent_toolkit.providers.twilio import TwilioMediaTransport
 ```
 
-Provider modules: `calling_agent_toolkit.providers.{twilio,plivo,telnyx,vonage,deepgram}`.
+Provider modules: `calling_agent_toolkit.providers.{twilio,plivo,telnyx,vonage,deepgram,openai}`.
 
 See the repository's `docs/` for architecture, provider compatibility (including what is **not** supported), and security guidance.

@@ -67,10 +67,10 @@ jobs:
           tarball=$(cd packages/typescript && npm pack --silent)
           mkdir /tmp/consumer && cd /tmp/consumer && npm init -y > /dev/null
           npm install "$GITHUB_WORKSPACE/packages/typescript/$tarball"
-          node --input-type=module -e "for (const s of ['', '/twilio', '/plivo', '/telnyx', '/vonage', '/deepgram']) await import('@vasikmansuri/calling-agent-toolkit' + s)"
+          node --input-type=module -e "for (const s of ['', '/twilio', '/plivo', '/telnyx', '/vonage', '/deepgram', '/openai']) await import('@vasikmansuri/calling-agent-toolkit' + s)"
       - name: Install wheel into a clean venv
         run: |
           (cd packages/python && uv build)
           uv venv /tmp/pyconsumer
           uv pip install --python /tmp/pyconsumer/bin/python packages/python/dist/*.whl
-          /tmp/pyconsumer/bin/python -I -c "import calling_agent_toolkit.providers.twilio, calling_agent_toolkit.rag, calling_agent_toolkit.email_capture"
+          /tmp/pyconsumer/bin/python -I -c "import calling_agent_toolkit.providers.twilio, calling_agent_toolkit.providers.openai, calling_agent_toolkit.rag, calling_agent_toolkit.email_capture"
