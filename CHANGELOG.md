@@ -18,6 +18,7 @@
 - **Generic transports:** configurable JSON WebSocket parser; raw PCM WebSocket session; RTP parser, packetizer and session; WAV reading and writing; recording framing.
 - **Conformance suite:** reusable, framework-agnostic, for media adapters.
 - **Audio pipeline:** streaming resampler, framing, processor chain with honest status and stacking warnings.
+- **RNNoise processor (optional):** TypeScript (`./rnnoise`, optional peer `@jitsi/rnnoise-wasm`) and Python (`ctypes` to `librnnoise`). Reports `active: false` when the engine is missing. Latency and CPU measured for TypeScript only.
 - **Email capture:** spoken-form normalization, clarification instead of guessing, refusal and deferral, confirmation protection, persistence, isolation.
 - **STT:** contracts, transcript reconciler, pipeline-to-STT bridge, Deepgram live adapter.
 - **RAG:** safe retriever (tenant and ACL, timeout, cancellation, citations, untrusted marking), retrieval coordinator (final-only, stale protection), LangChain and LlamaIndex wrappers, in-memory retriever.

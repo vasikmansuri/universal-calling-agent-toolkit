@@ -211,7 +211,7 @@ A frame arrives every 20,000 µs, so processing uses well under 1% of real time 
 
 ```
 contracts/           JSON Schema + shared fixtures — the single source of truth
-packages/typescript  @vasikmansuri/calling-agent-toolkit   (. /twilio /plivo /telnyx /vonage /deepgram)
+packages/typescript  @vasikmansuri/calling-agent-toolkit   (. /twilio /plivo /telnyx /vonage /deepgram /rnnoise)
 packages/python      calling-agent-toolkit                 (calling_agent_toolkit.providers.*)
 examples/            live dashboard + end-to-end scripts
 benchmarks/          reproducible micro-benchmarks
@@ -237,7 +237,7 @@ docs/                architecture, providers, audio, email, STT, RAG, security, 
 
 - [x] Twilio, Plivo, Telnyx and Vonage adapters · RTP · generic WebSocket · WAV batch
 - [x] Audio pipeline, email capture, STT reconciler, safe RAG
-- [ ] Bundled noise-suppression engine (RNNoise / DTLN), measured on real call audio
+- [ ] Noise-suppression engines measured on real call audio (an optional RNNoise processor exists; its accuracy impact is unmeasured). DTLN and others are not wrapped
 - [ ] Live-account integration tests for every provider
 - [ ] More STT adapters (OpenAI, Google, Azure, AWS, ElevenLabs)
 - [ ] Telnyx and Vonage call control · SignalWire

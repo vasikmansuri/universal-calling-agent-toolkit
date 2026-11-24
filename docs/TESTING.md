@@ -69,6 +69,7 @@ Twilio and Plivo run it in both languages.
 | `fixtures/stt/reconciler.json` | Interim, final and turn-end reconciliation |
 | `fixtures/email/{extraction,sessions}.json` | 24 extraction cases and 11 multi-step capture sessions |
 | `fixtures/audio/resample.json` | Integer-exact resampler vectors, one-shot and streamed |
+| `fixtures/audio/rnnoise.json` | RNNoise processor behaviour (property check, not exact samples; engines differ). Noise-only input must be attenuated below a set energy ratio |
 | `fixtures/rag/retrieval.json` | Tenant, ACL, filters, ranking, citations and escaped context formatting |
 | `fixtures/transports/rtp-wav.json` | 10 RTP packet vectors and 8 WAV vectors |
 
@@ -81,7 +82,7 @@ Twilio and Plivo run it in both languages.
 | Node 26.10 / TypeScript 5 | typecheck clean; **268/268** tests passed (9 files); build OK |
 | Python 3.13 | **271/271** passed (includes the real `langchain-core` test) |
 | Python 3.10 | **271/271** passed; `mypy --strict` clean (22 source files) |
-| Packaging | The wheel installs into an empty Python 3.12 venv with **no runtime dependencies**, and every module imports. The npm tarball installs into an empty project with **no dependencies**, and all 6 entry points import |
+| Packaging | The wheel installs into an empty Python 3.12 venv with **no runtime dependencies**, and every module imports. The npm tarball installs into an empty project with **no dependencies**, and all 7 entry points import |
 | Examples | `examples/typescript/end-to-end.mjs` and `examples/python/end_to_end.py` produce identical results: 50 frames / 32,000 bytes reach STT, the email candidate is captured, and the support question is grounded with a citation |
 
 Mutation check (Phase 3a): two bugs injected into the Python adapters failed 3 and 2 tests respectively.
@@ -98,10 +99,12 @@ Measured with `benchmarks/typescript/bench.mjs` and `benchmarks/python/bench.py`
 | Twilio media message → AudioFrame | 3.4 µs | 7.3 µs |
 | Email extraction, per utterance | 0.9 µs | 3.9 µs |
 
-A 20 ms frame arrives every 20,000 µs, so the measured per-stream processing cost is well under 1% of real time in both runtimes. These figures exclude noise-suppression engines, network I/O and STT.
+A 20 ms frame arrives every 20,000 µs, so the measured per-stream processing cost is well under 1% of real time in both runtimes. These figures exclude noise-suppression engines, network I/O and STT. RNNoise has its own benchmark, `benchmarks/typescript/rnnoise-bench.mjs`, with figures in [AUDIO_PIPELINE.md](AUDIO_PIPELINE.md#measured-cost).
+
+**RNNoise tests:** the TypeScript suite runs the real WebAssembly engine (a dev dependency). The Python suite tests the processor's logic against a stand-in library; the two tests that need the real `librnnoise` run only when `RNNOISE_LIBRARY` points at it, and are skipped otherwise.
 
 ## Not yet done
 
 - **Live provider tests:** run behind explicit opt-in environment variables with dedicated test accounts. These resolve the open questions in PROVIDER_COMPATIBILITY.md and RELEASE_CHECKLIST.md.
-- **Noise-suppression quality:** STT word error rate with and without an engine, on real call audio.
+- **Noise-suppression quality:** STT word error rate with and without an engine, on real call audio. RNNoise's Python latency and CPU, and the Python processor against the real `librnnoise`, are also unmeasured.
 - **Retrieval relevance:** evaluation on a labelled set.

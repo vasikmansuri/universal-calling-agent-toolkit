@@ -1,0 +1,6 @@
+{
+  "description": "RNNoise processor behaviour shared by both packages. Engines differ (WebAssembly in TypeScript, native librnnoise in Python), so exact output samples are NOT shared; only properties are. RNNoise works on 480-sample frames at 48 kHz (https://github.com/xiph/rnnoise). noiseOnly: generate PCM16 white noise with seed = (seed * 1664525 + 1013904223) mod 2^32 (start from `seed`), sample = floor((seed / 2^32 - 0.5) * amplitude + 0.5), 480 samples per frame. After `warmupFrames`, summed output energy over summed input energy must be below maxEnergyRatio.",
+  "sampleRate": 48000,
+  "frameSamples": 480,
+  "noiseOnly": { "seed": 1, "amplitude": 6000, "warmupFrames": 20, "frames": 100, "maxEnergyRatio": 0.001 }
+}
