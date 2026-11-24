@@ -13,7 +13,7 @@ from collections.abc import Sequence
 from dataclasses import dataclass, field
 from typing import Literal, Protocol
 
-from .audio import decode_mulaw
+from .audio import decode_alaw, decode_mulaw
 from .errors import ProviderError
 from .types import SUPPORTED_SAMPLE_RATES, AudioFormat, AudioFrame, MediaDirection, TimestampKind
 
@@ -181,6 +181,8 @@ class AudioPipeline:
             raise ProviderError(code="unsupported_format", provider=_PROVIDER, message="Only mono audio is supported.")
         if frame.format.encoding == "mulaw":
             samples = pcm16_to_samples(decode_mulaw(frame.payload))
+        elif frame.format.encoding == "alaw":
+            samples = pcm16_to_samples(decode_alaw(frame.payload))
         elif frame.format.encoding == "pcm_s16le":
             samples = pcm16_to_samples(frame.payload)
         else:

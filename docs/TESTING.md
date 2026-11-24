@@ -10,6 +10,7 @@
 | `fixtures/core/capability-checks.json` | `requireCapability` outcomes and error codes |
 | `fixtures/core/frame-validation.json` | Payload size, alignment and sample-rate validation |
 | `fixtures/core/g711-mulaw.json` | All 256 μ-law decode values and encode vectors |
+| `fixtures/core/g711-alaw.json` | All 256 A-law decode values and encode vectors |
 
 The test suites also check that each language's enums (`AudioEncoding`, `Capability`, `ProviderErrorCode`) are identical to the schema's.
 
@@ -24,7 +25,18 @@ enc=[[s,audioop.lin2ulaw(struct.pack("<h",s),2)[0]] for s in samples]
 json.dump({"description":"ITU-T G.711 mu-law reference vectors generated with audioop-lts (CPython audioop). decode[i] is the PCM16 value of mu-law byte i; encode entries are [pcm16, mulaw].","source":"audioop-lts on PyPI","decode":dec,"encode":enc},open("contracts/fixtures/core/g711-mulaw.json","w"),separators=(",",":"))'
 ```
 
-Note: CPython encodes on 14-bit samples (`pcm >> 2`, arithmetic shift), so -1 encodes to `0x7E`. The common bias-0x84 16-bit encoder gives `0x7F`. Both packages follow CPython.
+The A-law vectors come from the same reference:
+
+```sh
+uv run --no-project --python 3.13 --with audioop-lts python -I -c '
+import audioop, json, struct
+dec=[struct.unpack("<h",audioop.alaw2lin(bytes([i]),2))[0] for i in range(256)]
+samples=[-32768,-32767,-32256,-10000,-1000,-256,-255,-100,-16,-15,-9,-8,-1,0,1,7,8,15,16,31,100,255,256,1000,4096,10000,32256,32767]
+enc=[[s,audioop.lin2alaw(struct.pack("<h",s),2)[0]] for s in samples]
+json.dump({"description":"ITU-T G.711 A-law reference vectors generated with audioop-lts (CPython audioop). decode[i] is the PCM16 value of A-law byte i; encode entries are [pcm16, alaw].","source":"audioop-lts on PyPI","decode":dec,"encode":enc},open("contracts/fixtures/core/g711-alaw.json","w"),separators=(",",":"))'
+```
+
+Note: CPython encodes μ-law on 14-bit samples (`pcm >> 2`, arithmetic shift), so -1 encodes to `0x7E`. The common bias-0x84 16-bit encoder gives `0x7F`. Both packages follow CPython. A-law likewise encodes on 13-bit samples (`pcm >> 3`), so -1 encodes to `0x55` rather than `0xD5`.
 
 ## Running
 
